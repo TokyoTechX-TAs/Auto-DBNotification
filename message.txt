@@ -1,0 +1,17 @@
+Dear $PERSON_NAME,
+
+This is the discussion board activity of the TokyoTechX "$COURSENAME" this week. 
+
+----------------- WEEKLY DISCUSSION BOARD NOTIFICATION  -----------------
+
+Period: $DATE1 to $DATE2
+Course Name: $COURSENAME
+Nunber of new post/response: $NEWPOST
+Number of post with new comment: $NEWCOMMENT
+
+------------------------------------------------------------------------
+
+Please find attached file for further new post information.
+
+Best regards,
+OEDO team

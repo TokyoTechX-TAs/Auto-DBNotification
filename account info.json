@@ -1,0 +1,10 @@
+{
+    "edXaccount": "xxx@email.com",
+    "edXpassword": "password1",
+    "email_body_template": "message.txt",
+    "email_body_error_template": "error_message.txt",
+    "host_address": "yyy@email.com",
+    "host_port": "587",
+    "host_pwd": "password2",
+    "host_smtp": ""
+}

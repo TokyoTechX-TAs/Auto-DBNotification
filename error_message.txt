@@ -1,0 +1,22 @@
+Dear $PERSON_NAME,
+
+There is an expected issue while retrieving the discussion board activity of the TokyoTechX "$COURSENAME" this week. 
+
+
+----------------- WEEKLY DISCUSSION BOARD NOTIFICATION  -----------------
+
+Period: $DATE1 to $DATE2
+Course Name: $COURSENAME
+
+
+---------------------------- ERROR LOG DETAIL ---------------------------
+
+$ERRORCONTENT
+
+
+
+-------------------------------------------------------------------------
+
+
+Best regards,
+OEDO team
