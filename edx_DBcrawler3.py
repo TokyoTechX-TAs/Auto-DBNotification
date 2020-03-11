@@ -24,7 +24,7 @@ import csv
 
 
 chrome_options = Options()  
-chrome_options.add_argument('headless')
+#chrome_options.add_argument('headless')
 chrome_options.add_argument('window-size=1920x1080')
 chrome_options.add_argument("--log-level=3")  # fatal 
 chrome_options.add_argument('--disable-gpu')
@@ -165,14 +165,40 @@ class DB_crawler():
 
 	
 	def log_in(self):
-		sign_in_url="https://courses.edx.org/login?next=/dashboard"
+		sign_in_url="https://courses.edx.org/login"
+		account_lang_setup_url = "https://account.edx.org"
+		dashboard_url = "https://courses.edx.org/dashboard"
+
+		account_pref_link = '//*[@href="/#site-preferences"]'
+		lang_edit_box = '//*[@id="site-preferences"]/div[1]//*[@class="btn ml-3 btn-link"]'
+		lang_select = '//*[@id="field-siteLanguage"]/option[@value="en"]'
+		save_box = '//*[@id="site-preferences"]/div[1]/div/form/p/button[1]'
+
+
 		self.driver.get(sign_in_url)
 		time.sleep(2)
 		self.driver.find_element_by_id("login-email").send_keys(self.usr)
 		self.driver.find_element_by_id("login-password").send_keys(self.pwd)
 		#self.driver.find_element_by_id("login-remember").click()
 		self.driver.find_element_by_class_name("login-button").click()
-	
+		time.sleep(2)
+		print('successfully logged in to edX')
+
+		self.driver.get(account_lang_setup_url)
+		WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.XPATH, account_pref_link)))
+
+		self.driver.find_element_by_xpath(account_pref_link).click()
+		time.sleep(2)
+		self.driver.find_element_by_xpath(lang_edit_box).click()
+		time.sleep(2)
+		self.driver.find_element_by_xpath(lang_select).click()
+		time.sleep(2)
+		self.driver.find_element_by_xpath(save_box).click()
+		WebDriverWait(self.driver, 10).until_not(EC.presence_of_element_located((By.XPATH, save_box)))
+		
+		self.driver.get(dashboard_url)
+		print('successfully change preference language')
+
 
 	def load_all_thread(self):
 
@@ -248,7 +274,7 @@ class DB_crawler():
 	
 	def list_dash_course(self):
 		WebDriverWait(self.driver, 20).until(EC.presence_of_element_located((By.CLASS_NAME, "course-container")))
-		print('successfully logged in')
+		print('successfully logged in to dashboard')
 		time.sleep(2)
 		courses = self.driver.find_elements_by_class_name("course-container") 
 		course_list = []
