@@ -24,6 +24,7 @@ import traceback,errno,time,webbrowser,html,string,re,json,os,getpass,sys,csv,ti
 
 
 chrome_options = Options()  
+chrome_options.add_experimental_option('prefs', {'intl.accept_languages': 'en,en-US'})
 chrome_options.add_argument('headless')
 chrome_options.add_argument('window-size=1920x1080')
 chrome_options.add_argument("--log-level=3")  # fatal 
@@ -215,7 +216,7 @@ class DB_json2excel():
 				self.sheet.write_string(tmp_res_row_idx+3,comment_idx+1,re.sub('[A-Z]',' ',res_timestamp).strip())
 			
 			tmp_res_row_idx+=4
-		   
+		
 			
 		
 		
@@ -224,141 +225,141 @@ class DB_json2excel():
 
 
 class email_session():
-    def __init__(self):
-        with open(EDXACCOUNT,'r') as f:
-            json_f = json.loads(f.read())
+	def __init__(self):
+		with open(EDXACCOUNT,'r') as f:
+			json_f = json.loads(f.read())
 
-        self.myaddress = json_f['host_address']
-        self.pwd       = json_f['host_pwd']
-        self.smtphost  = json_f['host_smtp']
-        self.port      = json_f['host_port']
+		self.myaddress = json_f['host_address']
+		self.pwd       = json_f['host_pwd']
+		self.smtphost  = json_f['host_smtp']
+		self.port      = json_f['host_port']
 
-        with open(json_f['email_body_template'], 'r', encoding='utf-8') as template_file:
-            self.message_template = Template(template_file.read())
+		with open(json_f['email_body_template'], 'r', encoding='utf-8') as template_file:
+			self.message_template = Template(template_file.read())
 
-        with open(json_f['email_body_error_template'], 'r', encoding='utf-8') as template_file:
-            self.error_message_template = Template(template_file.read())
-
-
-    def connect_to_email(self):
-        self.s = smtplib.SMTP(host=self.smtphost, port=self.port)
-        self.s.starttls()
-        self.s.login(self.myaddress, self.pwd)
-
-    def terminate_session(self):
-        self.s.quit()
-
-    def email_send(self,email):
-        #print(emails)
-        # send the message via the server set up earlier.
-        self.s.sendmail(self.myaddress, email, self.msg.as_string() )
-        #s.send_message(text)
-        del self.msg
-
-    def generate_email_and_send(self,new_post_df,new_comment_df,recepients,coursename,coursedir,attach_file_name):
+		with open(json_f['email_body_error_template'], 'r', encoding='utf-8') as template_file:
+			self.error_message_template = Template(template_file.read())
 
 
-        if new_post_df.empty and new_comment_df.empty:
-            attachment_boolean = False
-            NO_new_post = str(0)
-            NO_new_comment = str(0)
-        else:
-            attachment_boolean = True
-            NO_new_post = str(len(new_post_df))
-            NO_new_comment = str(len(new_comment_df))
+	def connect_to_email(self):
+		self.s = smtplib.SMTP(host=self.smtphost, port=self.port)
+		self.s.starttls()
+		self.s.login(self.myaddress, self.pwd)
 
-        for recepient_bundle in recepients:
-            recepient = recepient_bundle.split(',')
-            recepient_name = recepient[0]
-            recepient_address = recepient[1]
-            recepient_flag = recepient[2]
+	def terminate_session(self):
+		self.s.quit()
 
+	def email_send(self,email):
+		#print(emails)
+		# send the message via the server set up earlier.
+		self.s.sendmail(self.myaddress, email, self.msg.as_string() )
+		#s.send_message(text)
+		del self.msg
 
-            self.msg = MIMEMultipart()       # create a message
-
-            # add in the actual person name to the message template
-            message = self.message_template.substitute(PERSON_NAME=recepient_name.title(),
-                                                       DATE1=(datetime.now() - timedelta(days=7)).strftime("%Y%m%d"),
-                                                       DATE2=datetime.now().strftime("%Y%m%d"),
-                                                       COURSENAME=coursename,
-                                                       NEWPOST=NO_new_post,
-                                                       NEWCOMMENT=NO_new_comment)
-            #message = message_template
-
-            # Prints out the message body for our sake
-            #print(message)
-
-            # setup the parameters of the message
-            self.msg['From'] = self.myaddress
-            self.msg['To']   = recepient_address
-            self.msg['Subject']= "Discussion board Notification: {}".format(coursename)
-
-            # add in the message body
-            self.msg.attach(MIMEText(message,'plain'))
-            self.msg.content_type = 'text/plain'
-
-            if attachment_boolean:
-                ## add attached file
-
-                attach_file = open(Path(FOLDERDIR,coursedir,attach_file_name), 'rb') # Open the file as binary mode
-                mimetype, encoding = guess_type(attach_file_name)
-                mimetype = mimetype.split('/', 1)
-
-                p = MIMEBase(mimetype[0],mimetype[1],Name=attach_file_name) 
-
-                # To change the payload into encoded form 
-                p.set_payload((attach_file).read()) 
-
-                attach_file.close()
-                # encode into base64 
-                encode_base64(p) 
-
-                #p.add_header('Content-Decomposition', 'attachment; Name=course table.xlsx') 
-
-                # attach the instance 'p' to instance 'msg' 
-                self.msg.attach(p) 
-                self.email_send(recepient_address)
-            else:
-                if recepient_flag == 'yes':
-                    self.email_send(recepient_address)
-
-            time.sleep(2)
+	def generate_email_and_send(self,new_post_df,new_comment_df,recepients,coursename,coursedir,attach_file_name):
 
 
-    def generate_email_and_send_failed_crawling(self,recepients,coursename,error_detail):
+		if new_post_df.empty and new_comment_df.empty:
+			attachment_boolean = False
+			NO_new_post = str(0)
+			NO_new_comment = str(0)
+		else:
+			attachment_boolean = True
+			NO_new_post = str(len(new_post_df))
+			NO_new_comment = str(len(new_comment_df))
 
-        for recepient_bundle in recepients:
-            recepient = recepient_bundle.split(',')
-            recepient_name = recepient[0]
-            recepient_address = recepient[1]
-            recepient_flag = recepient[2]
-
-
-            self.msg = MIMEMultipart()       # create a message
-
-            # add in the actual person name to the message template
-            message = self.error_message_template.substitute(PERSON_NAME=recepient_name.title(),
-                                                       DATE1=(datetime.now() - timedelta(days=7)).strftime("%Y%m%d"),
-                                                       DATE2=datetime.now().strftime("%Y%m%d"),
-                                                       COURSENAME=coursename,
-                                                       ERRORCONTENT=error_detail)
-            #message = message_template
-
-            # Prints out the message body for our sake
-            #print(message)
-
-            # setup the parameters of the message
-            self.msg['From'] = self.myaddress
-            self.msg['To']   = recepient_address
-            self.msg['Subject']= "Discussion board Notification: [UNEXPECTED ERROR FOUND] : {}".format(coursename)
-
-            # add in the message body
-            self.msg.attach(MIMEText(message,'plain'))
-            self.msg.content_type = 'text/plain'
+		for recepient_bundle in recepients:
+			recepient = recepient_bundle.split(',')
+			recepient_name = recepient[0]
+			recepient_address = recepient[1]
+			recepient_flag = recepient[2]
 
 
-            self.email_send(recepient_address)
-            time.sleep(2)
+			self.msg = MIMEMultipart()       # create a message
+
+			# add in the actual person name to the message template
+			message = self.message_template.substitute(PERSON_NAME=recepient_name.title(),
+													   DATE1=(datetime.now() - timedelta(days=7)).strftime("%Y-%m-%d"),
+													   DATE2=(datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d at %H:%M"),
+													   COURSENAME=coursename,
+													   NEWPOST=NO_new_post,
+													   NEWCOMMENT=NO_new_comment)
+			#message = message_template
+
+			# Prints out the message body for our sake
+			#print(message)
+
+			# setup the parameters of the message
+			self.msg['From'] = self.myaddress
+			self.msg['To']   = recepient_address
+			self.msg['Subject']= "Discussion board Notification: {}".format(coursename)
+
+			# add in the message body
+			self.msg.attach(MIMEText(message,'plain'))
+			self.msg.content_type = 'text/plain'
+
+			if attachment_boolean:
+				## add attached file
+
+				attach_file = open(Path(FOLDERDIR,coursedir,attach_file_name), 'rb') # Open the file as binary mode
+				mimetype, encoding = guess_type(attach_file_name)
+				mimetype = mimetype.split('/', 1)
+
+				p = MIMEBase(mimetype[0],mimetype[1],Name=attach_file_name) 
+
+				# To change the payload into encoded form 
+				p.set_payload((attach_file).read()) 
+
+				attach_file.close()
+				# encode into base64 
+				encode_base64(p) 
+
+				#p.add_header('Content-Decomposition', 'attachment; Name=course table.xlsx') 
+
+				# attach the instance 'p' to instance 'msg' 
+				self.msg.attach(p) 
+				self.email_send(recepient_address)
+			else:
+				if recepient_flag == 'yes':
+					self.email_send(recepient_address)
+
+			time.sleep(2)
+
+
+	def generate_email_and_send_failed_crawling(self,recepients,coursename,error_detail):
+
+		for recepient_bundle in recepients:
+			recepient = recepient_bundle.split(',')
+			recepient_name = recepient[0]
+			recepient_address = recepient[1]
+			recepient_flag = recepient[2]
+
+
+			self.msg = MIMEMultipart()       # create a message
+
+			# add in the actual person name to the message template
+			message = self.error_message_template.substitute(PERSON_NAME=recepient_name.title(),
+													   DATE1=(datetime.now() - timedelta(days=7)).strftime("%Y%m%d"),
+													   DATE2=datetime.now().strftime("%Y%m%d"),
+													   COURSENAME=coursename,
+													   ERRORCONTENT=error_detail)
+			#message = message_template
+
+			# Prints out the message body for our sake
+			#print(message)
+
+			# setup the parameters of the message
+			self.msg['From'] = self.myaddress
+			self.msg['To']   = recepient_address
+			self.msg['Subject']= "Discussion board Notification: [UNEXPECTED ERROR FOUND] : {}".format(coursename)
+
+			# add in the message body
+			self.msg.attach(MIMEText(message,'plain'))
+			self.msg.content_type = 'text/plain'
+
+
+			self.email_send(recepient_address)
+			time.sleep(2)
 
 
 
@@ -379,13 +380,42 @@ class DB_crawler():
 		return(self.driver)
 
 	def log_in(self):
-		sign_in_url="https://courses.edx.org/login?next=/dashboard"
+		sign_in_url="https://courses.edx.org/login"
+		account_lang_setup_url = "https://account.edx.org"
+		dashboard_url = "https://courses.edx.org/dashboard"
+
+		account_pref_link = '//*[@href="/#site-preferences"]'
+		lang_edit_box = '//*[@id="site-preferences"]/div[1]//*[@class="btn ml-3 btn-link"]'
+		lang_select = '//*[@id="field-siteLanguage"]/option[@value="en"]'
+		save_box = '//*[@id="site-preferences"]/div[1]/div/form/p/button[1]'
+
+
 		self.driver.get(sign_in_url)
 		time.sleep(2)
 		self.driver.find_element_by_id("login-email").send_keys(self.usr)
 		self.driver.find_element_by_id("login-password").send_keys(self.pwd)
 		#self.driver.find_element_by_id("login-remember").click()
 		self.driver.find_element_by_class_name("login-button").click()
+		time.sleep(2)
+
+		print('successfully logged in to edX')
+
+
+
+		self.driver.get(account_lang_setup_url)
+		WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.XPATH, account_pref_link)))
+
+		self.driver.find_element_by_xpath(account_pref_link).click()
+		time.sleep(2)
+		self.driver.find_element_by_xpath(lang_edit_box).click()
+		time.sleep(2)
+		self.driver.find_element_by_xpath(lang_select).click()
+		time.sleep(2)
+		self.driver.find_element_by_xpath(save_box).click()
+		WebDriverWait(self.driver, 10).until_not(EC.presence_of_element_located((By.XPATH, save_box)))
+		
+		self.driver.get(dashboard_url)
+		print('successfully change preference language')
 
 
 	def load_all_thread(self):
@@ -462,7 +492,7 @@ class DB_crawler():
 
 	def list_dash_course(self):
 		WebDriverWait(self.driver, 20).until(EC.presence_of_element_located((By.CLASS_NAME, "course-container")))
-		print('successfully logged in')
+		print('successfully logged in to dashboard')
 		time.sleep(2)
 		courses = self.driver.find_elements_by_class_name("course-container") 
 		course_list = []
@@ -543,8 +573,8 @@ class DB_crawler():
 			#thread_list = self.driver.find_elements_by_class_name("forum-nav-thread")
 
 		#thread_list = load_thread()
-		if not thread_list:
-			print('no thread in this category')
+		#if not thread_list:
+		#	print('no thread in this category')
 		#print('     running in the {}th loop: {}th to {}th thread indx'.format(load_thread_no,tmp_current_thread+1,len(thread_list)))
 		idx = 0
 		for idx in range(len(thread_list)):
@@ -565,8 +595,13 @@ class DB_crawler():
 			#loop_flag = self.load_thread()
 			#time.sleep(2)
 			#load_thread_no+=1
-		if idx > 0:
+		#if idx > 0:
+			
+		if not thread_list:
+			print('no thread in this category')
+		else:
 			idx+=1
+			
 		print('     all {} threads in {} category were successfully crawled\n'.format(idx,cat_name))
 		self.driver.find_element_by_xpath('//*[@class="btn-link all-topics"]').click()
 		WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.XPATH,'//div[@class="forum-nav-browse-menu-wrapper" and @style="display: block;"]')))
@@ -814,22 +849,25 @@ if __name__== "__main__":
 
 
 
-
+	
 	df_coursetable = pd.read_excel(COURSETABLE_EXCEL)
 	email_s = email_session()
 	email_s.connect_to_email()
 	
 	if success_course_url:
 
-	    success_course_idx = [df_coursetable.index[df_coursetable['course url'] == idx ].tolist()[0] for idx in success_course_url]
-	    success_email_send(df_coursetable.loc[ success_course_idx , : ],email_s)
+		success_course_idx = [df_coursetable.index[df_coursetable['course url'] == idx ].tolist()[0] for idx in success_course_url]
+		success_email_send(df_coursetable.loc[ success_course_idx , : ],email_s)
 
 	if failed_course_url:
 
-	    failed_course_idx  = [df_coursetable.index[df_coursetable['course url'] == idx ].tolist()[0] for idx in  failed_course_url]
-	    failed_email_send(df_coursetable.loc[ failed_course_idx , : ],email_s,failed_course_log)
+		failed_course_idx  = [df_coursetable.index[df_coursetable['course url'] == idx ].tolist()[0] for idx in  failed_course_url]
+		failed_email_send(df_coursetable.loc[ failed_course_idx , : ],email_s,failed_course_log)
 
 	email_s.terminate_session()
+
+	shutil.move(filename, Path('update_logfile',filename))
+	
 
 
 	#df_coursetable = pd.read_excel(COURSETABLE_EXCEL)
